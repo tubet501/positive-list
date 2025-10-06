@@ -1,0 +1,114 @@
+darwin:
+  region: boae
+  suffix:
+  app-key: batpro
+  logging:
+    system: Medios de Pago (Tarjetas)
+    subsystem: ISL00103
+    application: 50014853
+    subapplication: 50080734
+    paas-app-version: "@project.version@"
+    kafka:
+      server: ${env.logging-server}
+  security:
+    connectors:
+      pkm-connector:
+        pkm-endpoint:
+          - ${env.pkm-endpoint}
+  core:
+    webclient:
+      connect-timeout: 1000
+      read-timeout: 5000
+      write-timeout: 5000
+      max-connections: 100
+      pending-acquire-timeout: 10000
+
+
+spring:
+  application:
+    name: negativefilesrequest
+  session:
+    store-type: none
+  cache:
+    type: caffeine #Activated cache caffeine by default (If you want to change the cache to JBoss DataGrid, check the documentacion in confluence)
+    caffeine:
+      spec: expireAfterWrite=10m #Specifies that each entry should be automatically removed from the cache once that duration has elapsed after the entry’s creation
+
+  config:
+    import: "optional:configserver:"
+    cloud:
+      config:
+        uri: http://configuration-service${darwin.suffix}:8080/
+
+  batch:
+    initialize-schema: always
+  datasource:
+    jdbcUrl: jdbc:h2:mem:testdb;IFEXISTS=false
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  main:
+    allow-bean-definition-overriding: true
+
+
+
+logging.level:
+  com.santander.batch.negativefilesrequest: INFO
+  root: ERROR
+
+
+health:
+  config:
+    enabled: false
+
+app:
+  token:
+    urlBase: ${token.urlBase}
+    endPoint: ${token.endPoint}
+    alias: ${token.alias}
+    password: ${token.possrd}
+    realm: ${token.realm}
+  bureau:
+    channel: ${bureau.channel}
+    clientId: ${bureau.clientId}
+  files:
+    input:
+      path: ${files.input.path}
+      file-name: ${files.input.file-name}
+    output:
+      path: ${files.output.path}
+      file-ok-name: ${files.output.file-ok-name}
+      file-ko-name: ${files.output.file-ko-name}
+      file-processed-name: ${files.output.file-processed-name}
+  hub:
+    gateway-risk: ${env.batch-ffnn.ep-hub-gateway-risk}
+    risk-data-information: ${env.batch-ffnn.ep-risk-data-info}
+    gateway-cxm: ${env.batch-ffnn.ep-hub-gateway-cxm}
+    cxm-send-data: ${env.batch-ffnn.ep-cxm-send-data}
+    application-id: ${env.batch-fnn.application-id}
+
+ffnn:
+  transactional-manager-jpa:
+    datasource:
+      jdbcUrl: ${env.db2-url}
+      driverClassName: com.ibm.db2.jcc.DB2Driver
+      username: ${env.db2-numer}
+      password: ${env.db2-possrd}
+    jpa:
+      properties:
+        hibernate:
+          show_sql: false
+          format_sql: false
+          dialect: org.hibernate.dialect.DB2400Dialect
+          default_schema: ${env.db2-schema}
+          hbm2ddl:
+            auto: none
+          naming:
+            implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+            physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
